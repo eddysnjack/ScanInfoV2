@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ScanInfoV2</string>
+    <string name="searchview_default_hint">İsim Ver!</string>
+    <string name="scanner_button_text">Kod ile Arama Yap</string>
+    <string name="name_button_text">İsim ile Aram Yap</string>
+    <string name="label_search_completed_text">Arama Tamamlandı...</string>
+    <string name="label_connection_weak_text">Veri Alınamadı. Bağlantı Zayıf.</string>
+    <string name="label_cant_recive_medicine_data">İlaç Bilgisi Alınamadı.</string>
+    <string name="label_couldnt_find">Sonuç Bulunamadı.</string>
+    <string name="searchview_empty_notification_hint">İsim vermeyi mi unuttuk sanki?</string>
+    <string name="scanning_is_on_process_title">Tarıyoruz abicim...</string>
+    <string name="scanning_cancelled">İptal edildi...</string>
+    <string name="extra_information_into_webview_for_notifying_user">← ilaç kullanım bilgileri için tıklayın ←</string>
+    <string name="menu_item_openinBrowser">Tarayıcıda Aç</string>
+</resources>
