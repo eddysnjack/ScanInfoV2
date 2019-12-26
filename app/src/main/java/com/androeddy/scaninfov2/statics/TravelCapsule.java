@@ -1,4 +1,4 @@
-package com.androeddy.scaninfov2;
+package com.androeddy.scaninfov2.statics;
 
 import android.os.AsyncTask;
 import android.widget.ProgressBar;

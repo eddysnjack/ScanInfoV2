@@ -1,4 +1,4 @@
-package com.androeddy.scaninfov2;
+package com.androeddy.scaninfov2.statics;
 
 import com.journeyapps.barcodescanner.CaptureActivity;
 

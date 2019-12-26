@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">ScanInfoV2</string>
-    <string name="searchview_default_hint">Give me the Name!</string>
+    <string name="searchview_default_hint">Search medicine by name or serial number</string>
     <string name="scanner_button_text">Search with Scanning the Code</string>
-    <string name="name_button_text">Search With The Name</string>
+    <string name="name_button_text">Search</string>
     <string name="label_search_completed_text">Search has been done...</string>
     <string name="label_connection_weak_text">Data couldn\'t be retrieved. The connection is weak.</string>
     <string name="label_cant_recive_medicine_data">Unable to get the medicine information.</string>
@@ -12,4 +12,11 @@
     <string name="scanning_cancelled">Cancelled...</string>
     <string name="extra_information_into_webview_for_notifying_user">←Click for the usage information←</string>
     <string name="menu_item_openinBrowser">Open in Browser</string>
+    <string name="main_activity_title_most_searched_medicines">MOST SEARCHED MEDICINES</string>
+    <string name="main_activity_label_medicine_name">Adı:</string>
+    <string name="main_activity_label_medicine_firm">Firma:</string>
+    <string name="main_activity_label_medicine_barcode">Barkod:</string>
+    <string name="main_activity_label_medicine_active_ingredient">Etkin Madde:</string>
+    <string name="main_activity_label_medicine_prescription">Reçete:</string>
+    <string name="main_activity_label_medicine_num_of_pieces">Ambalaj Miktar:</string>
 </resources>

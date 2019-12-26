@@ -33,10 +33,10 @@ public class ResultActivity extends AppCompatActivity {
         }
         extractedData = incomingdata.getStringArray("MedicineDetails"); //Gelen bilgi : {MedName, BaseUrl, MedicineResult} şeklinde
 
-//        TextView Label =findViewById(R.id.txtBody);
-//        Label.setMovementMethod(new ScrollingMovementMethod());
-//        Label.setMovementMethod(LinkMovementMethod.getInstance());
-//        Label.setText(Html.fromHtml(extractedData[3]));
+//        TextView textview_warning_messages =findViewById(R.id.txtBody);
+//        textview_warning_messages.setMovementMethod(new ScrollingMovementMethod());
+//        textview_warning_messages.setMovementMethod(LinkMovementMethod.getInstance());
+//        textview_warning_messages.setText(Html.fromHtml(extractedData[3]));
 
         TextView title = findViewById(R.id.txtBaslik);
         title.setText(extractedData[0]);
