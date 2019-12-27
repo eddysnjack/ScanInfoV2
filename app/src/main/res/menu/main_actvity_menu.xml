@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menuitem_ayarlar"
+        android:checkable="false"
+        android:enabled="true"
+        android:menuCategory="container"
+        android:title="Ayarlar"
+        android:visible="true" />
+</menu>

@@ -1,7 +1,9 @@
-package com.androeddy.scaninfov2.statics;
+package com.androeddy.scaninfov2.adapters;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.os.Build;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,11 +45,18 @@ public class CustomExpandableListAdapter extends BaseExpandableListAdapter {
         if (convertView == null) {
             LayoutInflater layoutInflater = (LayoutInflater) this.context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = layoutInflater.inflate(R.layout.listview_item, null);
+            convertView = layoutInflater.inflate(R.layout.expandable_listview_item, null);
         }
         TextView expandedListTextView = (TextView) convertView
                 .findViewById(R.id.list_item);
-        expandedListTextView.setText(expandedListText);
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            expandedListTextView.setText(Html.fromHtml(expandedListText, Html.FROM_HTML_MODE_COMPACT));
+        } else {
+            expandedListTextView.setText(Html.fromHtml(expandedListText));
+        }
+        //expandedListTextView.setText(expandedListText);
         return convertView;
     }
 
@@ -79,7 +88,7 @@ public class CustomExpandableListAdapter extends BaseExpandableListAdapter {
         if (convertView == null) {
             LayoutInflater layoutInflater = (LayoutInflater) this.context.
                     getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = layoutInflater.inflate(R.layout.listview_title, null);
+            convertView = layoutInflater.inflate(R.layout.expandable_listview_title, null);
         }
         TextView listTitleTextView = (TextView) convertView
                 .findViewById(R.id.list_title);

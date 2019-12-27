@@ -2,49 +2,62 @@ package com.androeddy.scaninfov2;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.ScrollView;
 import android.widget.SearchView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.androeddy.scaninfov2.adapters.CustomExpandableListAdapter;
 import com.androeddy.scaninfov2.connections.AsyncGetWithJsoup;
 import com.androeddy.scaninfov2.connections.AsyncGetWithJsoupMulti;
+import com.androeddy.scaninfov2.connections.DatabaseLayer;
 import com.androeddy.scaninfov2.statics.CaptureActivityPortrait;
+import com.androeddy.scaninfov2.statics.DBTableSearchHistory;
 import com.androeddy.scaninfov2.statics.LinkLayer;
 import com.androeddy.scaninfov2.statics.MedicineInfoObject;
+import com.androeddy.scaninfov2.statics.MedicineUrlObject;
+import com.androeddy.scaninfov2.statics.URLTypes;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity {
     ImageButton imgBtnScanner;
-    Button BtnName, mainActivity_button_test;
+    Button mainActivity_button_search/*, mainActivity_button_test*/;
     SearchView InputSearch;
     ProgressBar progressBar;
     TextView textview_warning_messages,
@@ -55,15 +68,21 @@ public class MainActivity extends AppCompatActivity {
             mainActivity_text_medicinePieces,
             mainActivity_text_medicinePrescription;
     TableLayout mainActivity_part_homeScreen;
-    ScrollView mainActivity_part_resultScreen;
+    LinearLayout mainActivity_part_resultScreen;
     MedicineInfoObject globalMedicineInfo;
     ExpandableListView mainActivity_expandableListMedicine;
+    ImageButton mainActivity_button_Home;
+    Toolbar mainActivity_toolbar;
 
-    public static final String globalnedirNeicinKullanilir = "nedirNeicinKullanilir";
-    public static final String globalnasilKullanilir = "nasilKullanilir";
-    public static final String globalkullanmadanOnceDikkat = "kullanmadanOnceDikkat";
-    public static final String globalyanEtkiler = "yanEtkiler";
-
+    public static final String keyKTnedirNeicinKullanilir = "Nedir Ne İçin Kullanılır";
+    public static final String keyKTnasilKullanilir = "Nasıl Kullanılır";
+    public static final String keyKTkullanmadanOnceDikkat = "Kullanmadan Önce Dikkat Edilmesi Gerekenler";
+    public static final String keyKTyanEtkiler = "Yan Etkiler";
+    public static final String keyilacProspektusuDozaj = "İlaç Prospektüsü Dozaj";
+    public static final String keyilacProspektusuEndikasyonlari = "İlaç Prospektüsü Endikasyonları";
+    public static final String keyilacProspektusuEtkilesimler = "İlaç Prospektüsü Etkileşimler";
+    public static final String keyilacProspektusuKontrendikasyonlari = "İlaç Prospektüsü Kontrendikasyonları";
+    public static final String keyilacProspektusuYanEtkiler = "İlaç Prospektüsü Yan Etkiler";
 
     //------------------------------------------ MAIN ------------------------------------------------//
     @Override
@@ -72,14 +91,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        BtnName = findViewById(R.id.BtnIdName);
+        mainActivity_button_search = findViewById(R.id.mainActivity_button_search);
         imgBtnScanner = findViewById(R.id.imgBtnScanner);
         InputSearch = findViewById(R.id.InputSearchID);
         progressBar = findViewById(R.id.ProBar);
         textview_warning_messages = findViewById(R.id.mainActivity_textview_warnings_and_messages);
         mainActivity_part_homeScreen = findViewById(R.id.mainActivity_part_homeScreen);
         mainActivity_part_resultScreen = findViewById(R.id.mainActivity_part_resultScreen);
-        mainActivity_button_test = findViewById(R.id.mainActivity_button_test);
+        //mainActivity_button_test = findViewById(R.id.mainActivity_button_test);
         mainActivity_text_medicineActiveIngredient = findViewById(R.id.mainActivity_text_medicineActiveIngredient);
         mainActivity_text_medicineBarcode = findViewById(R.id.mainActivity_text_medicineBarcode);
         mainActivity_text_medicineFirm = findViewById(R.id.mainActivity_text_medicineFirm);
@@ -87,20 +106,20 @@ public class MainActivity extends AppCompatActivity {
         mainActivity_text_medicinePieces = findViewById(R.id.mainActivity_text_medicinePieces);
         mainActivity_text_medicinePrescription = findViewById(R.id.mainActivity_text_medicinePrescription);
         mainActivity_expandableListMedicine = findViewById(R.id.mainActivity_expandableListMedicine);
-        //
+        mainActivity_button_Home = findViewById(R.id.mainActivity_button_Home);
+        mainActivity_toolbar = findViewById(R.id.mainActivity_toolbar);
+        setSupportActionBar(mainActivity_toolbar);
+        //other settings
         globalMedicineInfo = new MedicineInfoObject();
-
-        //-----fill the home list
+        textview_warning_messages.setText("");
         fillTheHomeList();
         ///------------ test amaçlı
-        mainActivity_button_test.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-            }
-        });
-
-
+//        mainActivity_button_test.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//
+//            }
+//        });
 //------------------------------------ Button Click Listeners ------------------------------------//
         //Scanner button function
         imgBtnScanner.setOnClickListener(new View.OnClickListener() {
@@ -111,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //Name search button function
-        BtnName.setOnClickListener(new View.OnClickListener() {
+        mainActivity_button_search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -123,17 +142,15 @@ public class MainActivity extends AppCompatActivity {
                 } else { // if its empty show the hint
                     InputSearch.setQueryHint(getString(R.string.searchview_empty_notification_hint));
                 }
-
             }
         });
-
 
         //search box submit method / klavye ekranında arama tuşunu aktifleştirme
         InputSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 CloseTheKeyboard();
-                BtnName.performClick();
+                mainActivity_button_search.performClick();
                 return true;
             }
 
@@ -142,7 +159,17 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        mainActivity_button_Home.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mainActivity_part_resultScreen.setVisibility(View.GONE);
+                mainActivity_part_homeScreen.setVisibility(View.VISIBLE);
+                textview_warning_messages.setText("");
+            }
+        });
     }
+//============================================================= NATIVE METHOD ENDS
 
     private void setUrlsOfHomeScreen(HashMap<String, String> NameAndUrls) {
         if (NameAndUrls == null) {
@@ -204,6 +231,8 @@ public class MainActivity extends AppCompatActivity {
 
     // -----MEDICINE_DATA_CHAIN_1
     private void getMedicineResultsAndShowDetails(String urlAddressOfMedicine) {
+        //if we are here then clear the fields first
+        clearTheResultFields();
         AsyncGetWithJsoup.AsyncResponse asyncResponse = new AsyncGetWithJsoup.AsyncResponse() {
             @Override
             public void processFinish(Document output, int position) {
@@ -219,6 +248,17 @@ public class MainActivity extends AppCompatActivity {
 
         AsyncGetWithJsoup asyncGetWithJsoup = new AsyncGetWithJsoup(asyncResponse);
         asyncGetWithJsoup.execute(urlAddressOfMedicine);
+    }
+
+    private void clearTheResultFields() {
+        mainActivity_text_medicineActiveIngredient.setText("");
+        mainActivity_text_medicineBarcode.setText("");
+        mainActivity_text_medicineFirm.setText("");
+        mainActivity_text_medicineName.setText("");
+        mainActivity_text_medicinePieces.setText("");
+        mainActivity_text_medicinePrescription.setText("");
+        //listeyi boşalt. direk null olmuyor. https://stackoverflow.com/questions/21114346/clear-expandablelistview/30301383
+        mainActivity_expandableListMedicine.setAdapter((BaseExpandableListAdapter) null);
     }
 
     // -----MEDICINE_DATA_CHAIN_2
@@ -242,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
             if (firstCellContent.toLowerCase().contains("etkin madde")) {
                 globalMedicineInfo.setActiveIngredient(secondCell.text());
                 System.out.println("etkin madde" + secondCell.text());
-            } else if (firstCellContent.toLowerCase().contains("logo") && firstCellContent.toLowerCase().contains("img")) {
+            } else if (firstCellContent.toLowerCase().contains("logo") && firstCellContent.toLowerCase().contains("img") || firstCellContent.contains("align=\"left\" valign=\"top\"")) {
                 String firmName = secondCell.selectFirst("h2").text();
                 globalMedicineInfo.setFirm(firmName);
                 System.out.println("firma" + firmName);
@@ -262,33 +302,97 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        //set overview data
+        mainActivity_text_medicineActiveIngredient.setText(globalMedicineInfo.getActiveIngredient());
+        mainActivity_text_medicineBarcode.setText(globalMedicineInfo.getBarcode());
+        mainActivity_text_medicineFirm.setText(globalMedicineInfo.getFirm());
+        mainActivity_text_medicineName.setText(globalMedicineInfo.getName());
+        mainActivity_text_medicinePieces.setText(globalMedicineInfo.getPieces());
+        mainActivity_text_medicinePrescription.setText(globalMedicineInfo.getPrescription());
+        //save to history
+        DatabaseLayer db = new DatabaseLayer(this);
+        Date currentdate = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+        db.saveSearchHistory(
+                new DBTableSearchHistory(
+                        globalMedicineInfo.getName(),
+                        globalMedicineInfo.getBarcode(),
+                        sdf.format(currentdate)
+                )
+        );
 
-        getMedicineUsageLiks(document);
-        //diğer bilgiler başka linklerden çekilecek, linklerin ekleri aynı linkleri program içinde oluştur
-        String baseUrl = document.baseUri();
-        String nedirNeicinKullanilirURL = baseUrl + LinkLayer.URL_NEDIRNEICINKULLANILIR_SUFFIX;
-        String nasilKullanilirURL = baseUrl + LinkLayer.URL_NASLKULANILIR_SUFFIX;
-        String kullanmadanOnceDikkatURL = baseUrl + LinkLayer.URL_KULLANMADANONCEDIKKAT_SUFIX;
-        String yanEtkilerURL = baseUrl + LinkLayer.URL_YANETKILER_SUFFIX;
-        HashMap<String, String> keysAndUrls = new HashMap<>();
-        keysAndUrls.put(globalnedirNeicinKullanilir, nedirNeicinKullanilirURL);
-        keysAndUrls.put(globalnasilKullanilir, nasilKullanilirURL);
-        keysAndUrls.put(globalkullanmadanOnceDikkat, kullanmadanOnceDikkatURL);
-        keysAndUrls.put(globalyanEtkiler, yanEtkilerURL);
-        //getMedicineUsageData(keysAndUrls); //ŞİMDİLİK İPTAL
+        MedicineUrlObject medicineUrlObject = getMedicineUsageLiks(document);
+        if (medicineUrlObject.getUrlType() == URLTypes.notFound) {
+            System.out.println("getAllMedicineData: KULLANIM DETAYLRI İÇİN KAYIT BULUNAMADI");
+            textview_warning_messages.setText("Kullanım detayları için kayıt bulunamadı");
+
+        } else if (medicineUrlObject.getUrlType() == URLTypes.kt) {
+            textview_warning_messages.setText("Kullanım Talimatı Gösteriliyor");
+            getMedicineUsageData(medicineUrlObject);
+        } else if (medicineUrlObject.getUrlType() == URLTypes.prescription) {
+            textview_warning_messages.setText("Kullanım Talimatı BULUNAMADI Prospektüs Gösteriliyor");
+            getMedicineUsageData(medicineUrlObject);
+        }
     }
 
-    private void getMedicineUsageLiks(Document document) {
+    private MedicineUrlObject getMedicineUsageLiks(Document document) {
         //eğer KT-kullanma talimatı- varsa onu kullan
-        Element tableKTandKUBandPR = document.select("div.col-right > table").first();
-        System.out.println();
+        Elements tableKTandKUBandPR = document.select("div.col-right > table > tbody > tr>td");
+        int flag = 0;
+        HashMap<String, String> keysAndUrls = new HashMap<>();
+        MedicineUrlObject medicineUrlObject = new MedicineUrlObject();
+        for (Element element : tableKTandKUBandPR) {
+            String href = element.getElementsByTag("a").attr("href");
+            if (href.contains("/kt/")) {//kullanma talimatı
+                flag = 1;
+                break;
+            }
 
-        //eğer KT yoksa PR'yi arşivdeki propektüsü kullan
+            if (href.contains("prospektusu")) {//prospektüs için
+                flag = 2;
+            }
+        }
 
+        //kt bizim için daha iyi. daha önemli
+        if ((flag & 1) == 1) {//kt vardır
+            //linkleri ayarla
+            String baseUrl = document.baseUri();
+            String nedirNeicinKullanilirURL = baseUrl + LinkLayer.KT_NEDIR_VE_NE_ICIN_KULLANILIR;
+            String nasilKullanilirURL = baseUrl + LinkLayer.KT_NASIL_KULLANILIR;
+            String kullanmadanOnceDikkatURL = baseUrl + LinkLayer.KT_KULLANMADAN_ONCE_DIKKAT_EDILMESI_GEREKENLER;
+            String yanEtkilerURL = baseUrl + LinkLayer.KT_YAN_ETKILERI;
+            keysAndUrls.put(keyKTnedirNeicinKullanilir, nedirNeicinKullanilirURL);
+            keysAndUrls.put(keyKTnasilKullanilir, nasilKullanilirURL);
+            keysAndUrls.put(keyKTkullanmadanOnceDikkat, kullanmadanOnceDikkatURL);
+            keysAndUrls.put(keyKTyanEtkiler, yanEtkilerURL);
+            medicineUrlObject.setUrlData(keysAndUrls);
+            medicineUrlObject.setUrlType(URLTypes.kt);
+        } else if ((flag & 2) == 2) {//propektus vardır
+            //linkleri ayarla
+            String baseUrl = document.baseUri();
+            String ilacProspektusuDozaj = baseUrl + LinkLayer.ILAC_PROSPEKTUSU_DOZAJ;
+            String ilacProspektusuEndikasyonlari = baseUrl + LinkLayer.ILAC_PROSPEKTUSU_ENDIKASYONLARI;
+            String ilacProspektusuEtkilesimler = baseUrl + LinkLayer.ILAC_PROSPEKTUSU_ETKILESIMLER;
+            String ilacProspektusuKontrendikasyonlari = baseUrl + LinkLayer.ILAC_PROSPEKTUSU_KONTRENDIKASYONLARI;
+            String ilacProspektusuYanEtkiler = baseUrl + LinkLayer.ILAC_PROSPEKTUSU_YAN_ETKILER;
+            keysAndUrls.put(keyilacProspektusuDozaj, ilacProspektusuDozaj);
+            keysAndUrls.put(keyilacProspektusuEndikasyonlari, ilacProspektusuEndikasyonlari);
+            keysAndUrls.put(keyilacProspektusuEtkilesimler, ilacProspektusuEtkilesimler);
+            keysAndUrls.put(keyilacProspektusuKontrendikasyonlari, ilacProspektusuKontrendikasyonlari);
+            keysAndUrls.put(keyilacProspektusuYanEtkiler, ilacProspektusuYanEtkiler);
+            medicineUrlObject.setUrlData(keysAndUrls);
+            medicineUrlObject.setUrlType(URLTypes.prescription);
+        } else {
+            medicineUrlObject.setUrlData(null);
+            medicineUrlObject.setUrlType(URLTypes.notFound);
+        }
+
+        return medicineUrlObject;
     }
 
     // -----MEDICINE_DATA_CHAIN_3
-    private void getMedicineUsageData(HashMap<String, String> keysAndUrls) {
+    private void getMedicineUsageData(MedicineUrlObject medicineUrlObject) {
+        final int urlType = medicineUrlObject.getUrlType();
         AsyncGetWithJsoupMulti.AsyncResponse asyncResponse = new AsyncGetWithJsoupMulti.AsyncResponse() {
             @Override
             public void processFinish(HashMap<String, Document> output, int position) {
@@ -297,28 +401,77 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
-                for (Object outputEntryObject : output.entrySet()) {
-                    Map.Entry entry = (Map.Entry) outputEntryObject;
-                    String key = (String) entry.getKey();
-                    Document value = (Document) entry.getValue();
-                    Elements fullText = value.getElementsByClass("prospektus_text");
-                    System.out.println("=================================== FULL TEXT");
-                    System.out.println(value.html());
-//                    if (fullText != null) {
-////                        Elements elements = fullText.first().children();
-////                        for (Element element : elements) {
-////                            System.out.println("TAGNAME : " + element.tagName());
-////                        }
-//                         System.out.println(fullText.html());
-//                    } else {
-//                        System.out.println("fullText IS EMPTY NULLLLLLLLLLLLLLLLLL");
-//                    }
+                if (urlType == URLTypes.kt) {
+                    List<String> titles = new ArrayList<>();
+                    HashMap<String, List<String>> text = new HashMap<>();
+
+                    for (Object outputEntryObject : output.entrySet()) {
+                        Map.Entry entry = (Map.Entry) outputEntryObject;
+                        String key = (String) entry.getKey();
+                        Document value = (Document) entry.getValue();
+                        Elements fullText = value.getElementsByClass("prospektus_text");
+                        if (fullText != null) {
+                            Element cleanVersionOfFullText = new Element("div");
+                            Elements allChildrens = fullText.get(0).children();
+                            for (Element textElement : allChildrens) {
+                                if (!textElement.tagName().contains("script") && !textElement.tagName().contains("div")) {//bu tagları at
+                                    cleanVersionOfFullText.append(textElement.toString());
+                                }
+                            }
+
+                            List<String> subText = new ArrayList<>();
+                            subText.add(cleanVersionOfFullText.html());
+                            text.put(key, subText);
+                            titles.add(key);
+                            //System.out.println(value.html());
+                        } else {
+                            System.out.println("fullText IS EMPTY NULLLLLLLLLLLLLLLLLL");
+                        }
+                    }
+
+                    if (titles.size() != 0 && text.size() != 0) {
+                        CustomExpandableListAdapter customExAdapter = new CustomExpandableListAdapter(getApplicationContext(), titles, text);
+                        mainActivity_expandableListMedicine.setAdapter(customExAdapter);
+                    }
+
+                } else if (urlType == URLTypes.prescription) {
+                    List<String> titles = new ArrayList<>();
+                    HashMap<String, List<String>> text = new HashMap<>();
+
+                    for (Object outputEntryObject : output.entrySet()) {
+                        Map.Entry entry = (Map.Entry) outputEntryObject;
+                        String key = (String) entry.getKey();
+                        Document value = (Document) entry.getValue();
+                        Elements fullText = value.getElementsByClass("prospektus_text");
+                        if (fullText != null) {
+                            Element cleanVersionOfFullText = new Element("div");
+                            Elements allChildrens = fullText.get(0).children();
+                            for (Element textElement : allChildrens) {
+                                if (!textElement.tagName().contains("script") && !textElement.tagName().contains("div")) {//bu tagları at
+                                    cleanVersionOfFullText.append(textElement.toString());
+                                }
+                            }
+
+                            List<String> subText = new ArrayList<>();
+                            subText.add(cleanVersionOfFullText.html());
+                            text.put(key, subText);
+                            titles.add(key);
+                            //System.out.println(value.html());
+                        } else {
+                            System.out.println("fullText IS EMPTY NULLLLLLLLLLLLLLLLLL");
+                        }
+                    }
+
+                    if (titles.size() != 0 && text.size() != 0) {
+                        CustomExpandableListAdapter customExAdapter = new CustomExpandableListAdapter(getApplicationContext(), titles, text);
+                        mainActivity_expandableListMedicine.setAdapter(customExAdapter);
+                    }
                 }
             }
         };
 
         AsyncGetWithJsoupMulti asyncGetWithJsoupMulti = new AsyncGetWithJsoupMulti(asyncResponse);
-        asyncGetWithJsoupMulti.execute(keysAndUrls);//https://stackoverflow.com/questions/21132692/java-unchecked-unchecked-generic-array-creation-for-varargs-parameter
+        asyncGetWithJsoupMulti.execute(medicineUrlObject.getUrlData());//https://stackoverflow.com/questions/21132692/java-unchecked-unchecked-generic-array-creation-for-varargs-parameter
 
     }
 
@@ -355,14 +508,6 @@ public class MainActivity extends AppCompatActivity {
         asyncGetWithJsoup.execute(LinkLayer.URL_HOME);
     }
 
-    //Things we want to change on resume from resultactivity(if user came back) / sonuç aktivitesinden dönüşte yapmak istediğimi,z değişiklikler
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        textview_warning_messages.setText("");
-    }
-
 //------------------------------------------CODE SCANING PROCESS------------------------------------//
 
     //Scanning Process arrangements / Kod tarama işlemleri hazırlıkları ↓
@@ -387,16 +532,42 @@ public class MainActivity extends AppCompatActivity {
         if (result != null) {
             if (result.getContents() == null) {
                 Toast.makeText(this, getString(R.string.scanning_cancelled), Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (result.getFormatName().equals("DATA_MATRIX")) {
+                //data matrix type has more than one fields in it so need to split.
+                //bu iş düşündüğümden de karışıkmış. https://www.databar-barcode.info/application-identifiers/
+                //https://www.mediclabel.nl/en/datamatrix/
+                //sıralama:
+                //A product identification code: GTIN (01)  => n2+n14
+                //A serial number (21)  => n2+an..20
+                //An expiry date (17)  => n2+n6
+                //A batch number (10)  =>n2+an..20
+                String content = result.getContents();
+                int indexOf01 = content.indexOf("01");
+                String serialNumb = content.substring(indexOf01 + 2, +indexOf01 + 2 + 14);
+                int indexOfNonZeroStart = 0;
+                for (int i = 0; i < serialNumb.length(); i++) {
+                    if (serialNumb.charAt(i) == '0') {
+                        continue;
+                    } else {
+                        indexOfNonZeroStart = i;
+                        break;
+                    }
+                }
+
+                serialNumb = serialNumb.substring(indexOfNonZeroStart, serialNumb.length());
+                InputSearch.setQuery(serialNumb, true); // tarama sonucunu yaz ve ara
             } else {
                 InputSearch.setQuery(result.getContents(), true); // tarama sonucunu yaz ve ara
             }
         }
+
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-//---------------------------------------------- AsyncTask ----------------------------------------------//
-
-
+    //---------------------------------------------- AsyncTask ----------------------------------------------//
     private class MakeTheSearch extends AsyncTask<String, Void, Void> {
         ProgressBar prog = findViewById(R.id.ProBar); //yükleniyor diyalogu(yuvarlaklı) / on progress notification bar
         Document doc = null; //for the results / sonuçlar için bir nesne
@@ -443,14 +614,18 @@ public class MainActivity extends AppCompatActivity {
 
                 if (urlResult == "") {//eğer sonuç yoksa bulunamadı de, geri dön. // if there is no result return back with informational text.
                     textview_warning_messages.setText(getString(R.string.label_couldnt_find));
+                    clearTheResultFields();
                     return;
                 }
 
                 String[] cutted_url = urlResult.split("/"); // split the url in order to get the main mpage of medicine. / ilacın ana sayfasına gitmek için url'i ayrıştır
                 urlResult = cutted_url[0] + "/" + cutted_url[1] + "/" + cutted_url[2] + "/" + cutted_url[3] + "/" + cutted_url[4]; // yeni urli kaydet. / save the new url
                 textview_warning_messages.setText(getString(R.string.label_search_completed_text));//arama bitti bilgisini ver.
-                GetThePage gp = new GetThePage(); // ilaç sayfası için yeni bir asynctask hazırla
-                gp.execute(urlResult);//ve başlat.
+                getMedicineResultsAndShowDetails(urlResult);
+
+
+//                GetThePage gp = new GetThePage(); // ilaç sayfası için yeni bir asynctask hazırla
+//                gp.execute(urlResult);//ve başlat.
             } else { //dosya boşsa
                 textview_warning_messages.setText(getString(R.string.label_connection_weak_text)); // bağlantı zayıf bilgisini ver.
             }
@@ -458,55 +633,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private class GetThePage extends AsyncTask<String, Void, Void> { //ilaç sayfasına bağlanma task'i/işi
-        ProgressBar prog = findViewById(R.id.ProBar);
-        Document doc = null;
-
-        @Override
-        protected void onPreExecute() {
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-            prog.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        protected Void doInBackground(String... strings) {
-            try {
-                if (!strings[0].isEmpty()) {
-                    doc = Jsoup.connect(strings[0]).timeout(20000).get();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-            prog.setVisibility(View.GONE);
-            if (doc != null) {
-                String MedicineResult;
-                MedicineResult = doc.select("table#one-column-emphasisc").toString(); //medicine technical information / genel ilaç bilgisi
-                String MedUssageLinks = doc.select("table.tbbaslik td:nth-child(1)").toString()
-                        + doc.select("table.tbbaslik td:nth-child(2)").toString()
-                        + doc.select("table.tbbaslik td:nth-child(3)").toString(); //select the first thre element from the table (for the usage information)
-
-                MedUssageLinks += "<td>" + getString(R.string.extra_information_into_webview_for_notifying_user) + " </td>"; // alınan bilgilerde prospektüs bilgisi sadece buton ile gösterildiğnden, manuel olarak dosyaya ilaç bilgileri burdadır gibi bir uyarı ekledim.
-
-                String MedName = doc.select("span[itemprop='title']").last().text(); // ilaç başlığını-adını al. sayfa üstündeki navigasyondaki son span elemntinin içeriği ilacın adı oluyor.
-                String BaseUrl = doc.baseUri(); // ilerde kullanılmak üzere şu anki site url'sini aldık.
-                Intent secondpage = new Intent(getApplicationContext(), ResultActivity.class);
-//                secondpage.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); // şimdilik ihtiyacımız olmayan biir özellik. activity sıralamasını değiştiriyor. https://stackoverflow.com/questions/9937120/switching-between-activities-in-android
-
-                secondpage.putExtra("MedicineDetails", new String[]{MedName, BaseUrl, MedUssageLinks + MedicineResult}); //başlık, webview için baseurl, ve ilaç bilgilerini içeren html tablolarını yeni activiteye gönder.
-                startActivity(secondpage);//yeni aktivite başlat
-            } else {//doc dosyası boş ise;
-                textview_warning_messages.setText(getString(R.string.label_cant_recive_medicine_data));//ilaç bilgisi alınamadı uyarısı göster.
-            }
-        }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.main_actvity_menu, menu);
+        return true;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menuitem_ayarlar: {
+                Intent intent = new Intent(MainActivity.this, Settings.class);
+                startActivity(intent);
+                return true;
+            }
+        }
+
+        return true;
+    }
 
     private void CloseTheKeyboard() { // Klavyeyi Kapat
         View vi = this.getCurrentFocus();
